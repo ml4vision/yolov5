@@ -268,7 +268,7 @@ class Loggers():
         if self.comet_logger:
             self.comet_logger.on_model_save(last, epoch, final_epoch, best_fitness, fi)
 
-    def on_train_end(self, last, best, epoch, results):
+    def on_train_end(self, last, best, epoch, results, conf):
         # Callback runs on training end, i.e. saving best model
         if self.plots:
             plot_results(file=self.save_dir / 'results.csv')  # save results.png
@@ -299,6 +299,12 @@ class Loggers():
         if self.comet_logger:
             final_results = dict(zip(self.keys[3:10], results))
             self.comet_logger.on_train_end(files, self.save_dir, last, best, epoch, final_results)
+
+        # log best model results
+        file = self.save_dir / 'best.csv'
+        s = (('%20s,' * 5 % tuple(['precision', 'recall', 'mAP_0.5', 'mAP_0.5:0.95', 'conf'])).rstrip(',') + '\n')  # add header
+        with open(file, 'w') as f:
+            f.write(s + ('%20.5g,' * 5 % (results[:4] + (conf,))).rstrip(',') + '\n')
 
     def on_params_update(self, params: dict):
         # Update hyperparams or configs of the experiment

@@ -272,7 +272,7 @@ def run(
     # Compute metrics
     stats = [torch.cat(x, 0).cpu().numpy() for x in zip(*stats)]  # to numpy
     if len(stats) and stats[0].any():
-        tp, fp, p, r, f1, ap, ap_class = ap_per_class(*stats, plot=plots, save_dir=save_dir, names=names)
+        tp, fp, p, r, f1, ap, ap_class, conf = ap_per_class(*stats, plot=plots, save_dir=save_dir, names=names)
         ap50, ap = ap[:, 0], ap.mean(1)  # AP@0.5, AP@0.5:0.95
         mp, mr, map50, map = p.mean(), r.mean(), ap50.mean(), ap.mean()
     nt = np.bincount(stats[3].astype(int), minlength=nc)  # number of targets per class
@@ -333,7 +333,7 @@ def run(
     maps = np.zeros(nc) + map
     for i, c in enumerate(ap_class):
         maps[c] = ap[i]
-    return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t
+    return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t, conf
 
 
 def parse_opt():
