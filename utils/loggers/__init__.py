@@ -222,7 +222,7 @@ class Loggers():
         if self.comet_logger:
             self.comet_logger.on_val_end(nt, tp, fp, p, r, f1, ap, ap50, ap_class, confusion_matrix)
 
-    def on_fit_epoch_end(self, vals, epoch, best_fitness, fi):
+    def on_fit_epoch_end(self, vals, epoch, best_fitness, fi, conf):
         # Callback runs at the end of each fit (train+val) epoch
         x = dict(zip(self.keys, vals))
         if self.csv:
@@ -231,6 +231,12 @@ class Loggers():
             s = '' if file.exists() else (('%20s,' * n % tuple(['epoch'] + self.keys)).rstrip(',') + '\n')  # add header
             with open(file, 'a') as f:
                 f.write(s + ('%20.5g,' * n % tuple([epoch] + vals)).rstrip(',') + '\n')
+
+        # log best model results
+        file = self.save_dir / 'best.csv'
+        s = (('%20s,' * 5 % tuple(['precision', 'recall', 'mAP_0.5', 'mAP_0.5:0.95', 'conf'])).rstrip(',') + '\n')  # add header
+        with open(file, 'w') as f:
+            f.write(s + ('%20.5g,' * 5 % tuple(vals[3:7] + [conf])).rstrip(',') + '\n')
 
         if self.tb:
             for k, v in x.items():
@@ -268,7 +274,7 @@ class Loggers():
         if self.comet_logger:
             self.comet_logger.on_model_save(last, epoch, final_epoch, best_fitness, fi)
 
-    def on_train_end(self, last, best, epoch, results, conf):
+    def on_train_end(self, last, best, epoch, results):
         # Callback runs on training end, i.e. saving best model
         if self.plots:
             plot_results(file=self.save_dir / 'results.csv')  # save results.png
@@ -299,12 +305,6 @@ class Loggers():
         if self.comet_logger:
             final_results = dict(zip(self.keys[3:10], results))
             self.comet_logger.on_train_end(files, self.save_dir, last, best, epoch, final_results)
-
-        # log best model results
-        file = self.save_dir / 'best.csv'
-        s = (('%20s,' * 5 % tuple(['precision', 'recall', 'mAP_0.5', 'mAP_0.5:0.95', 'conf'])).rstrip(',') + '\n')  # add header
-        with open(file, 'w') as f:
-            f.write(s + ('%20.5g,' * 5 % (results[:4] + (conf,))).rstrip(',') + '\n')
 
     def on_params_update(self, params: dict):
         # Update hyperparams or configs of the experiment
