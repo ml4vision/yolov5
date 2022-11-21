@@ -227,16 +227,10 @@ class Loggers():
         x = dict(zip(self.keys, vals))
         if self.csv:
             file = self.save_dir / 'results.csv'
-            n = len(x) + 1  # number of cols
-            s = '' if file.exists() else (('%20s,' * n % tuple(['epoch'] + self.keys)).rstrip(',') + '\n')  # add header
+            n = len(x) + 2  # number of cols
+            s = '' if file.exists() else (('%20s,' * n % tuple(['epoch'] + self.keys + ['conf'])).rstrip(',') + '\n')  # add header
             with open(file, 'a') as f:
-                f.write(s + ('%20.5g,' * n % tuple([epoch] + vals)).rstrip(',') + '\n')
-
-        # log best model results
-        file = self.save_dir / 'best.csv'
-        s = (('%20s,' * 5 % tuple(['precision', 'recall', 'mAP_0.5', 'mAP_0.5:0.95', 'conf'])).rstrip(',') + '\n')  # add header
-        with open(file, 'w') as f:
-            f.write(s + ('%20.5g,' * 5 % tuple(vals[3:7] + [conf])).rstrip(',') + '\n')
+                f.write(s + ('%20.5g,' * n % tuple([epoch] + vals + [conf])).rstrip(',') + '\n')
 
         if self.tb:
             for k, v in x.items():
